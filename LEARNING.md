@@ -1,0 +1,1 @@
+- 2026-11-24 (M0): did not know what a listener is or which object each step returns; needed /show-me to see the TcpListener → TcpClient → NetworkStream chain. Confused Start (TcpListener) with TcpClient, and filled holes with values (address, request text) instead of objects.

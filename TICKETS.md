@@ -9,6 +9,7 @@ Status: TODO / DOING / DONE / PARKED
 ## M0 — See the bytes  (target: 2 sessions)
 
 ### M0-1 · Watch a raw HTTP request arrive
+Status: DOING
 Size: S (30 min)
 Why: Everything above this is an abstraction over text on a socket. You
      should see the text once.

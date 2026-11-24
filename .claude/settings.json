@@ -31,6 +31,17 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/where-was-i.sh"
+          }
+        ]
+      }
     ]
   }
 }
