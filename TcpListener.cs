@@ -3,8 +3,7 @@ using System.Net.Sockets;
 using System.Text;
 
 // create a new TcpListener server that is going to be listening to tcp requests
-
-IPAddress loopBackAddress = IPAddress.IPv6Loopback;
+IPAddress loopBackAddress = IPAddress.Loopback;
 var listener = new TcpListener(loopBackAddress, 8080);
 // start to listen to client requests
 listener.Start();
@@ -13,17 +12,62 @@ listener.Start();
 using TcpClient client = listener.AcceptTcpClient();
 
 // get a streaming object for reading and writing
-NetworkStream stream = client.GetStream();
+using NetworkStream stream = client.GetStream();
 
-// create a buffer for reading data
-byte[] buffer = new byte[4096];
-// receive all the data sent by the client
-int n = stream.Read(buffer, 0, buffer.Length);
+using var reader = new StreamReader(stream, Encoding.ASCII, leaveOpen: true);
+string? requestLine = reader.ReadLine();
 
-// translate data bytes to ASCII
-Console.WriteLine(Encoding.ASCII.GetString(buffer, 0, n));
+// M1 Design Decision: Repeated request headers are combined with ", " per RFC 9110
+// rather than silently overwritten.
+var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-byte[] response = Encoding.ASCII.GetBytes("HTTP/1.1 200 OK\r\n\r\n");
+while (true)
+{
+    string? headerLine = reader.ReadLine();
+    if (string.IsNullOrEmpty(headerLine))
+    {
+        break;
+    }
 
-// SEND BACK A response
+    int colonIndex = headerLine.IndexOf(':');
+    if (colonIndex > 0)
+    {
+        string name = headerLine[..colonIndex].Trim();
+        string value = headerLine[(colonIndex + 1)..].Trim();
+
+        if (headers.TryGetValue(name, out string? existingValue))
+        {
+            headers[name] = $"{existingValue}, {value}";
+        }
+        else
+        {
+            headers[name] = value;
+        }
+    }
+}
+
+if (!string.IsNullOrEmpty(requestLine))
+{
+    string[] parts = requestLine.Split(' ');
+    if (parts.Length >= 2)
+    {
+        string method = parts[0];
+        string rawTarget = parts[1];
+
+        string path = rawTarget.Split('?')[0];
+
+        Console.WriteLine(method);
+        Console.WriteLine(path);
+    }
+}
+
+// Print each stored header pair
+foreach (var header in headers)
+{
+    Console.WriteLine($"{header.Key}: {header.Value}");
+}
+
+byte[] response = Encoding.ASCII.GetBytes("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
+
+// SEND the 200 OK response
 stream.Write(response, 0, response.Length);
