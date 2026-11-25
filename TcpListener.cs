@@ -60,6 +60,19 @@ if (!string.IsNullOrEmpty(requestLine))
         Console.WriteLine(path);
     }
 }
+int size = headers.TryGetValue("Content-Length", out string? contentLengthValue) ? Convert.ToInt32(contentLengthValue) : 0;
+
+string content = string.Empty;
+if (size > 0)
+{
+    char[] buffer = new char[size];
+
+    int charsReader = reader.Read(buffer, 0, buffer.Length);
+
+    content = new(buffer, 0, charsReader);
+}
+
+Console.WriteLine(content);
 
 // Print each stored header pair
 foreach (var header in headers)
